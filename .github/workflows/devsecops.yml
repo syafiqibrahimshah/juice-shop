@@ -1,0 +1,31 @@
+name: "DevSecOps Pipeline"
+on: [push, pull_request]
+
+env:
+  NODE_VERSION: 20
+  APP_PORT: 3000
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+      - run: npm run build
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: 'javascript'
+        queries: security-extended
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        upload: true
+        category: "/language:javascript"
+        ram: 4096
+        threads: 2
