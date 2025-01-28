@@ -23,9 +23,6 @@ jobs:
             echo "::warning::No lockfile found. Using npm install instead"
             npm install
           fi
-      - name: Build project
-        id: build
-        run: npm run build
 
   sast:
     runs-on: ubuntu-latest
