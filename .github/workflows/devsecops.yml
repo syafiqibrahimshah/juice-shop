@@ -32,4 +32,18 @@ jobs:
 
     - name: Check for vulnerable dependencies
       run: npm audit
+
+    - name: Scan for secrets
+      run: |
+        output=$(docker run --rm -v "$(pwd)":/code trufflesecurity/trufflehog:latest \
+        filesystem --directory=/code \
+        --exclude-paths='node_modules,dist,test' \
+        --json)
+        
+        if [ -n "$output" ]; then
+          echo "::error::Secrets found! Check logs for details."
+          echo "$output"
+          exit 1
+        fi
+
       
