@@ -70,9 +70,12 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: syafiq-devsecops-playground
-          service_account_key: ${{ secrets.GCP_SA_KEY }}  # Store your service account key in GitHub secrets
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker asia-southeast2-docker.pkg.dev
 
       - name: Build Docker Image
         run: |
