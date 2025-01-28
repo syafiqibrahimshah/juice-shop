@@ -106,6 +106,6 @@ jobs:
     name: "📢 Notification"
     needs: [build, sast, secret_scanning]
     runs-on: ubuntu-latest
-    if: always()  
-     steps:
+    if: always()
+    steps:
       - name: "📤 Send Results to Defect Dojo"
