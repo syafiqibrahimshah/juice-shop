@@ -54,7 +54,7 @@ jobs:
 
   notify:
     name: "📢 Notification"
-    needs: [build, sast, sca, secret_scanning]
+    needs: [build, sast, secret_scanning]
     runs-on: ubuntu-latest
     if: always()  # Sentiasa run walaupun job lain fail
     steps:
