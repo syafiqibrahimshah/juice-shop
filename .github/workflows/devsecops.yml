@@ -42,33 +42,24 @@ jobs:
     name: "🔒 Security Scans"
     needs: build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - scan: sast
-            action: "github/codeql-action/analyze@v3"
-            inputs: 
-              languages: "javascript"
-              ram: 4096
-          - scan: secrets
-            action: "trufflesecurity/trufflehog-action@main"
-            inputs:
-              paths: "./"
-              exclude-paths: "node_modules,dist,test"
-              version: "${{ env.TRUFFLEHOG_VERSION }}"
-    
     steps:
       - uses: actions/checkout@v4
       
-      - name: "🛡️ Run ${{ matrix.scan }} scan"
-        uses: "${{ matrix.action }}"
-        with: ${{ matrix.inputs }}
-        
-      # SCA kena handle separate
+      - name: "🛡️ Run SAST scan"
+        uses: "github/codeql-action/analyze@v3"
+        with: 
+          languages: "javascript"
+          ram: 4096
+          
       - name: "🛡️ Run SCA (npm audit)"
-        if: matrix.scan == 'sast'  # Run sekali je
         run: npm audit --audit-level=moderate --production
+          
+      - name: "🛡️ Run Secrets scan"
+        uses: "trufflesecurity/trufflehog-action@main"
+        with:
+          paths: "./"
+          exclude-paths: "node_modules,dist,test"
+          version: "${{ env.TRUFFLEHOG_VERSION }}"
 
   notify:
     name: "📢 Notification"
