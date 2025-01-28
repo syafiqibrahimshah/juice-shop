@@ -42,30 +42,32 @@ jobs:
     name: "🔒 Security Scans"
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Fail kalau lama sangat
     strategy:
-      fail-fast: false  # Biar semua scan habis walaupun ada yang fail
+      fail-fast: false
       matrix:
         include:
           - scan: sast
-            uses: github/codeql-action/analyze@v3
-            with: { languages: 'javascript', ram: 4096 }
+            action: "github/codeql-action/analyze@v3"
+            inputs: 
+              languages: "javascript"
+              ram: 4096
           - scan: secrets
-            uses: trufflesecurity/trufflehog-action@main
-            with: 
-              paths: './'
-              exclude-paths: 'node_modules,dist,test'
-              version: ${{ env.TRUFFLEHOG_VERSION }}
+            action: "trufflesecurity/trufflehog-action@main"
+            inputs:
+              paths: "./"
+              exclude-paths: "node_modules,dist,test"
+              version: "${{ env.TRUFFLEHOG_VERSION }}"
     
     steps:
       - uses: actions/checkout@v4
       
       - name: "🛡️ Run ${{ matrix.scan }} scan"
-        uses: ${{ matrix.uses }}
-        with: ${{ matrix.with }}
+        uses: "${{ matrix.action }}"
+        with: ${{ matrix.inputs }}
         
-      # Handle SCA separately
+      # SCA kena handle separate
       - name: "🛡️ Run SCA (npm audit)"
+        if: matrix.scan == 'sast'  # Run sekali je
         run: npm audit --audit-level=moderate --production
 
   notify:
