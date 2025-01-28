@@ -49,8 +49,8 @@ jobs:
 
       - name: Run TruffleHog
         run: |
-          docker run --rm -v $(pwd):/repo trufflesecurity/trufflehog --path=/repo
-
+          docker run --rm -v $(pwd):/repo trufflesecurity/trufflehog filesystem /repo --json --github-actions > trufflehog-results.json
+          echo "::set-output name=trufflehog_results::$(cat trufflehog-results.json)"
 
   notify:
     name: "📢 Notification"
