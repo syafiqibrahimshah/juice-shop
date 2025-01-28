@@ -55,7 +55,10 @@ jobs:
             params: { args: '--audit-level=moderate --production' }
           - scan: secrets
             tool: trufflesecurity/trufflehog-action@main
-            params: { paths: './', exclude-paths: 'node_modules,dist,test', version: ${{ env.TRUFFLEHOG_VERSION }} }
+            params: 
+              paths: './'
+              exclude-paths: 'node_modules,dist,test'
+              version: ${{ env.TRUFFLEHOG_VERSION }}
     
     steps:
       - uses: actions/checkout@v4
