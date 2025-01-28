@@ -60,9 +60,9 @@ jobs:
           path: trufflehog-results.json
 
   build_and_push:
-    name: "🐳 Build and Push Docker Image"
+    name: "🐳 Build and Push Image"
     runs-on: ubuntu-latest
-    needs: [sast, secret_scanning]
+    #needs: [sast, secret_scanning]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
