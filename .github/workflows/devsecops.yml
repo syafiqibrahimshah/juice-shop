@@ -22,8 +22,7 @@ jobs:
           cache: 'npm'  # Auto cache node_modules
           
       - name: "📦 Install Dependencies"
-        id: install-deps
-        run: npm install 
+        run : npm install --ignore-scripts
 
   security:
     name: "🔒 Security Scans"
