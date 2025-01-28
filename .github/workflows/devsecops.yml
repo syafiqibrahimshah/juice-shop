@@ -1,9 +1,5 @@
-name: "🛡️ DevSecOps Pipeline"
-on: 
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+name: "DevSecOps Pipeline"
+on: [push, pull_request]
 
 env:
   NODE_VERSION: 20
