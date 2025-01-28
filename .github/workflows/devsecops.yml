@@ -104,7 +104,7 @@ jobs:
 
   notify:
     name: "📢 Notification"
-    needs: [build, sast, secret_scanning]
+    needs: [container_scanning]
     runs-on: ubuntu-latest
     if: always()
     steps:
