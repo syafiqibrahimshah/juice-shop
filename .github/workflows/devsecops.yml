@@ -23,31 +23,38 @@ jobs:
       - name: "📦 Install Dependencies"
         run : npm install --ignore-scripts
 
-  security:
-    name: "🔒 Security Scans"
-    needs: build
+  sast:
+    name: "🔍 SAST Analysis"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: "🛡️ Run SAST scan"
-        uses: "github/codeql-action/analyze@v3"
-        with: 
-          languages: "javascript"
-          ram: 4096
-          
-      - name: "🛡️ Run SCA (npm audit)"
-        run: npm audit --audit-level=moderate --production
-          
-      #- name: "🛡️ Run Secrets scan"
-      #  uses: trufflesecurity/trufflehog-action@v3.0.0
-      #  with:
-      #    paths: "./"
-      #    exclude-paths: "node_modules,dist,test"
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript  # Specify the languages you want to analyze
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          output: codeql-results.sarif  # Example output file name
+
+  secret_scanning:
+    name: "🔑 Secret Scanning"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run TruffleHog
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/repo trufflesecurity/trufflehog --path=/repo
+
 
   notify:
     name: "📢 Notification"
-    needs: [build, security]
+    needs: [build, sast, sca, secret_scanning]
     runs-on: ubuntu-latest
     if: always()  # Sentiasa run walaupun job lain fail
     steps:
@@ -62,7 +69,6 @@ jobs:
       - name: "📝 Create Job Summary"
         run: |
           echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "- SAST: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- SCA: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Secrets: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
-      
+          echo "- SAST: ${{ needs.sast.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SCA: ${{ needs.sca.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Secrets: ${{ needs.secret_scanning.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY    
