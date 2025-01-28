@@ -109,4 +109,4 @@ jobs:
     if: always()
     steps:
       - name: "📤 Send Results to Defect Dojo"
-        run: echo "TODO: Implement Defect Dojo integration"  # Temporary placeholder
+        run: echo "Implement Defect Dojo integration"  # Temporary placeholder
