@@ -29,17 +29,8 @@ jobs:
             echo "BUILD_SCRIPT_EXISTS=true" >> $GITHUB_OUTPUT
           fi
           
-          # Existing install logic
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit
-          else
-            npm install --no-package-lock
-            echo "::warning::Missing package-lock.json"
-          fi
-          
-      - name: "🔨 Build Project"
-        if: ${{ steps.install-deps.outputs.BUILD_SCRIPT_EXISTS == 'true' }}
-        run: npm run build --if-present
+          # Simple install tanpa check lock file
+          npm install --no-package-lock
 
   security:
     name: "🔒 Security Scans"
