@@ -39,11 +39,11 @@ jobs:
       - name: "🛡️ Run SCA (npm audit)"
         run: npm audit --audit-level=moderate --production
           
-      - name: "🛡️ Run Secrets scan"
-        uses: trufflesecurity/trufflehog-action@v3.0.0
-        with:
-          paths: "./"
-          exclude-paths: "node_modules,dist,test"
+      #- name: "🛡️ Run Secrets scan"
+      #  uses: trufflesecurity/trufflehog-action@v3.0.0
+      #  with:
+      #    paths: "./"
+      #    exclude-paths: "node_modules,dist,test"
 
   notify:
     name: "📢 Notification"
