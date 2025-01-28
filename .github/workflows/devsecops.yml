@@ -22,16 +22,23 @@ jobs:
           cache: 'npm'  # Auto cache node_modules
           
       - name: "📦 Install Dependencies"
+        id: install-deps
         run: |
+          # Check build script existence
+          if grep '"build":' package.json; then
+            echo "BUILD_SCRIPT_EXISTS=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Existing install logic
           if [ -f package-lock.json ]; then
-            npm ci --no-audit  # Skip audit sini untuk jimat masa
+            npm ci --no-audit
           else
             npm install --no-package-lock
             echo "::warning::Missing package-lock.json"
           fi
           
       - name: "🔨 Build Project"
-        if: contains(npm run, 'build')  # Auto detect build script
+        if: ${{ steps.install-deps.outputs.BUILD_SCRIPT_EXISTS == 'true' }}
         run: npm run build --if-present
 
   security:
