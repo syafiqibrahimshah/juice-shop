@@ -62,7 +62,7 @@ jobs:
   build_and_push:
     name: "🐳 Build and Push Docker Image"
     runs-on: ubuntu-latest
-    needs: [sast, container_scanning, secret_scanning]
+    needs: [sast, secret_scanning]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -87,7 +87,7 @@ jobs:
   container_scanning:
     name: "🔍 Container Scanning"
     runs-on: ubuntu-latest
-    needs: build_and_push  # Ensure this runs after the build_and_push job
+    needs: build_and_push
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
