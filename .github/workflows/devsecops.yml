@@ -23,14 +23,7 @@ jobs:
           
       - name: "📦 Install Dependencies"
         id: install-deps
-        run: |
-          # Check build script existence
-          if grep '"build":' package.json; then
-            echo "BUILD_SCRIPT_EXISTS=true" >> $GITHUB_OUTPUT
-          fi
-          
-          # Simple install tanpa check lock file
-          npm install --no-package-lock
+        run: npm install 
 
   security:
     name: "🔒 Security Scans"
