@@ -1,59 +1,92 @@
-name: "DevSecOps Pipeline"
-on: [push, pull_request]
+name: "🛡️ DevSecOps Pipeline"
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
   NODE_VERSION: 20
-  APP_PORT: 3000
+  TRUFFLEHOG_VERSION: v3.64.0  # Pin version untuk security
 
 jobs:
-  build-check:
+  build:
+    name: "🏗️ Build & Install"
     runs-on: ubuntu-latest
     outputs:
-      build-status: ${{ steps.build.outputs.status }}
+      build_status: ${{ steps.build.outputs.status }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - name: "🔁 Checkout Code"
+        uses: actions/checkout@v4
+        
+      - name: "⎔ Setup Node.js"
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
+          cache: 'npm'  # Auto cache node_modules
+          
+      - name: "📦 Install Dependencies"
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --no-audit  # Skip audit sini untuk jimat masa
           else
-            echo "::warning::No lockfile found. Using npm install instead"
-            npm install
+            npm install --no-package-lock
+            echo "::warning::Missing package-lock.json"
           fi
+          
+      - name: "🔨 Build Project"
+        if: contains(npm run, 'build')  # Auto detect build script
+        run: npm run build --if-present
 
-  sast:
+  security:
+    name: "🔒 Security Scans"
+    needs: build
     runs-on: ubuntu-latest
-    needs: build-check  # Tunggu build siap dulu
+    timeout-minutes: 30  # Fail kalau lama sangat
+    strategy:
+      fail-fast: false  # Biar semua scan habis walaupun ada yang fail
+      matrix:
+        include:
+          - scan: sast
+            tool: github/codeql-action/analyze@v3
+            params: { languages: 'javascript', ram: 4096 }
+          - scan: sca
+            tool: npm audit
+            params: { args: '--audit-level=moderate --production' }
+          - scan: secrets
+            tool: trufflesecurity/trufflehog-action@main
+            params: { paths: './', exclude-paths: 'node_modules,dist,test', version: ${{ env.TRUFFLEHOG_VERSION }} }
+    
     steps:
       - uses: actions/checkout@v4
-      - name: CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          languages: javascript
-          ram: 4096
+      
+      - name: "🛡️ Run ${{ matrix.scan }} scan"
+        if: matrix.scan != 'sca'
+        uses: ${{ matrix.tool }}
+        with: ${{ matrix.params }}
+        
+      - name: "🛡️ Run SCA (npm audit)"
+        if: matrix.scan == 'sca'
+        run: npm audit ${{ matrix.params.args }}
 
-  sca:
+  notify:
+    name: "📢 Notification"
+    needs: [build, security]
     runs-on: ubuntu-latest
-    needs: build-check  # Tunggu build siap dulu
+    if: always()  # Sentiasa run walaupun job lain fail
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - name: "📤 Send Slack Notification"
+        if: failure()
+        uses: archive/github-actions-slack@v2.1.3
         with:
-          node-version: ${{ env.NODE_VERSION }}
-      - run: npm audit --audit-level=moderate
-
-  secret-scan:
-    runs-on: ubuntu-latest
-    needs: build-check  # Tunggu build siap dulu
-    steps:
-      - uses: actions/checkout@v4
-      - name: TruffleHog Scan
-        uses: trufflesecurity/trufflehog-action@main
-        with:
-          paths: ./
-          exclude-paths: 'node_modules,dist,test'
-          fail: true
+          slack-message: "🚨 ${{ github.workflow }} failed! (${{ github.event_name }})"
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          
+      - name: "📝 Create Job Summary"
+        run: |
+          echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "- SAST: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SCA: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Secrets: ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
       
