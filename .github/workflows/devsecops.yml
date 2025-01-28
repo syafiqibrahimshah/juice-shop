@@ -83,9 +83,9 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push "asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:${{ github.run_id }}"
-          docker tag "asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:${{ github.run_id }}" asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
-          docker push asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
+          docker push "asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:${{ github.run_id }}"
+          docker tag "asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:${{ github.run_id }}" asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
+          docker push asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:latest
 
   container_scanning:
     name: "🔍 Container Scanning"
