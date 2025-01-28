@@ -29,3 +29,7 @@ jobs:
         category: "/language:javascript"
         ram: 4096
         threads: 2
+
+    - name: Check for vulnerable dependencies
+      run: npm audit
+      
