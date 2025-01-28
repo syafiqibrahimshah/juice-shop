@@ -8,45 +8,49 @@ env:
 jobs:
   build-check:
     runs-on: ubuntu-latest
+    outputs:
+      build-status: ${{ steps.build.outputs.status }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: npm ci
-      - run: npm run build
-      
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: 'javascript'
-          queries: security-extended
-      
-      - name: Perform CodeQL Analysis
+      - name: Install dependencies
+        run: npm ci
+      - name: Build project
+        id: build
+        run: npm run build
+
+  sast:
+    runs-on: ubuntu-latest
+    needs: build-check  # Tunggu build siap dulu
+    steps:
+      - uses: actions/checkout@v4
+      - name: CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          upload: true
-          category: "/language:javascript"
+          languages: javascript
           ram: 4096
-          threads: 2
-      
-      - name: Check for vulnerable dependencies
-        run: npm audit
-      
-      - name: Scan for secrets
-        run: |
-          # Pakai latest image + check exit code
-          docker run --rm -v "$(pwd):/code" trufflesecurity/trufflehog:latest \
-          filesystem /code \
-          --no-verification \
-          --exclude-paths='node_modules,dist,test,.git' \
-          --json \
-          --fail
 
-          # Check exit code dari docker
-          if [ $? -ne 0 ]; then
-            echo "::error::TruffleHog found secrets! Check logs for details"
-            exit 1
-          fi
+  sca:
+    runs-on: ubuntu-latest
+    needs: sast  # Tunggu SAST siap
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm audit --audit-level=moderate
 
+  secret-scan:
+    runs-on: ubuntu-latest
+    needs: sca  # Tunggu SCA siap
+    steps:
+      - uses: actions/checkout@v4
+      - name: TruffleHog Scan
+        uses: trufflesecurity/trufflehog-action@main
+        with:
+          paths: ./
+          exclude-paths: 'node_modules,dist,test'
+          fail: true
       
