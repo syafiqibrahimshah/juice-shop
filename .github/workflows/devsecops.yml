@@ -67,12 +67,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Clear gcloud config
+        run: gcloud config configurations delete default --quiet || true
+
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+
+      - name: Check gcloud authentication
+        run: |
+          gcloud auth list
+          gcloud config list project
 
       - name: Configure Docker Auth
         run: |
@@ -84,13 +92,9 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push "asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:${{ github.run_id }}"
-          docker tag "asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:${{ github.run_id }}" asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
-          docker push asia-southeast2-docker.pkg.dev/syafiq-devsecops-playground/devsecops-repo/juice-shop:latest
-
-    permissions:
-      contents: 'read'
-      id-token: 'write'  # Untuk workload identity
+          docker push "asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:${{ github.run_id }}"
+          docker tag "asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:${{ github.run_id }}" asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
+          docker push asia-southeast2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/devsecops-repo/juice-shop:latest
 
   container_scanning:
     name: "🔍 Container Scanning"
