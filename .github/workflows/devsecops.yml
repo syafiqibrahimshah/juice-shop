@@ -48,14 +48,11 @@ jobs:
       matrix:
         include:
           - scan: sast
-            tool: github/codeql-action/analyze@v3
-            params: { languages: 'javascript', ram: 4096 }
-          - scan: sca
-            tool: npm audit
-            params: { args: '--audit-level=moderate --production' }
+            uses: github/codeql-action/analyze@v3
+            with: { languages: 'javascript', ram: 4096 }
           - scan: secrets
-            tool: trufflesecurity/trufflehog-action@main
-            params: 
+            uses: trufflesecurity/trufflehog-action@main
+            with: 
               paths: './'
               exclude-paths: 'node_modules,dist,test'
               version: ${{ env.TRUFFLEHOG_VERSION }}
@@ -64,13 +61,12 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: "🛡️ Run ${{ matrix.scan }} scan"
-        if: matrix.scan != 'sca'
-        uses: ${{ matrix.tool }}
-        with: ${{ matrix.params }}
+        uses: ${{ matrix.uses }}
+        with: ${{ matrix.with }}
         
+      # Handle SCA separately
       - name: "🛡️ Run SCA (npm audit)"
-        if: matrix.scan == 'sca'
-        run: npm audit ${{ matrix.params.args }}
+        run: npm audit --audit-level=moderate --production
 
   notify:
     name: "📢 Notification"
