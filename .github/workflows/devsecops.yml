@@ -49,7 +49,7 @@ jobs:
 
       - name: Run TruffleHog
         run: |
-          docker run --rm -v ${{ github.workspace }}:/repo trufflesecurity/trufflehog --path=/repo
+          docker run --rm -v $(pwd):/repo trufflesecurity/trufflehog --path=/repo
 
 
   notify:
