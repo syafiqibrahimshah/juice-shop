@@ -35,14 +35,17 @@ jobs:
       
       - name: Scan for secrets
         run: |
-          output=$(docker run --rm -v "$(pwd)":/code trufflesecurity/trufflehog:latest \
-          filesystem --directory=/code \
-          --exclude-paths='node_modules,dist,test' \
-          --json)
-          
-          if [ -n "$output" ]; then
-            echo "::error::Secrets found! Check logs for details."
-            echo "$output"
+          # Pakai latest image + check exit code
+          docker run --rm -v "$(pwd):/code" trufflesecurity/trufflehog:latest \
+          filesystem /code \
+          --no-verification \
+          --exclude-paths='node_modules,dist,test,.git' \
+          --json \
+          --fail
+
+          # Check exit code dari docker
+          if [ $? -ne 0 ]; then
+            echo "::error::TruffleHog found secrets! Check logs for details"
             exit 1
           fi
 
